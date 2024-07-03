@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 typedef enum {
   TK_RESERVED, // 符号
@@ -64,4 +65,34 @@ void error(char *fmt, ...) {
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
   exit(1);
+}
+
+// 创建新的token，并连接
+Token *new_token(TokenKind kind, Token *cur, char *str) {
+  Token *token = calloc(1, sizeof(Token));
+  token->kind = kind;
+  token->str = str;
+  cur->next = token;
+  return token;
+}
+
+// 文本转标记
+Token *tokenize(char *p) {
+  // 栈上声明变量
+  Token head;
+  head.next = NULL;
+  // 取栈地址，在作用域结束后，head的地址会被释放
+  Token *cur = &head;
+
+  // 直到读到非零字符为止
+  while (*p) {
+    // 跳过空白字符
+    if (isspace(*p)) {
+      // 地址前进到下一个字节
+      p++;
+      continue;
+    }
+    // 识别当前字符是否是符号，包括+-*/()
+    if (*p)
+  }
 }

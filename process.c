@@ -80,3 +80,12 @@ Node *term() {
   }
   return new_node_num(expect_number());
 }
+
+int main(int argc, char **argv) {
+  if (argc != 2) {
+    fprintf(stderr, "参数数量错误\n");
+    return 1;
+  }
+  // 文本转token
+  // token = token
+}
