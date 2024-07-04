@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 typedef enum {
   TK_RESERVED, // 符号
@@ -16,11 +17,20 @@ struct Token {
   TokenKind kind; // 标记类型
   Token *next; // 下一个Token，链状结构
   int val; // 标记为TK_NUM的数值
-  char *str; // 标记对于的文本列
+  char *str; // 标记对应的文本列
 };
 
 // 全局变量，正在处理的Token
 Token *token;
+
+// 错误打印，退出程序
+void error(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
 
 // 尝试消费一个符号
 bool consume(char op) {
@@ -58,15 +68,6 @@ bool at_eof() {
   return token->kind == TK_EOF;
 }
 
-// 错误打印，退出程序
-void error(char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n");
-  exit(1);
-}
-
 // 创建新的token，并连接
 Token *new_token(TokenKind kind, Token *cur, char *str) {
   Token *token = calloc(1, sizeof(Token));
@@ -84,7 +85,7 @@ Token *tokenize(char *p) {
   // 取栈地址，在作用域结束后，head的地址会被释放
   Token *cur = &head;
 
-  // 直到读到非零字符为止
+  // 直到读到零字符为止
   while (*p) {
     // 跳过空白字符
     if (isspace(*p)) {
@@ -93,6 +94,48 @@ Token *tokenize(char *p) {
       continue;
     }
     // 识别当前字符是否是符号，包括+-*/()
-    if (*p)
+    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
+      cur = new_token(TK_RESERVED, cur, p);
+      p++;
+      continue;
+    }
+    // 识别当前字符是否是数字
+    if (isdigit(*p)) {
+      cur = new_token(TK_NUM, cur, p);
+      // 转换数字并将p赋值为结束位置
+      cur->val = strtol(p, &p, 10);
+      continue;
+    }
+    error("标记解析失败");
   }
+
+  new_token(TK_EOF, cur, p);
+  return head.next;
+}
+
+int main(int argc, char **argv) {
+  if (argc != 2) {
+    error("参数错误");
+    return 1;
+  }
+  // 解析token
+  token = tokenize(argv[1]);
+  printf(".intel_syntax noprefix\n");
+  printf(".global main\n");
+  printf("main:\n");
+
+  printf("  mov rax, %d\n", expect_number());
+  while (!at_eof()) {
+    if (consume('+')) {
+      printf("  add rax, %d\n", expect_number());
+      continue;
+    }
+    if (consume('-')) {
+      printf("  sub rax, %d\n", expect_number());
+      continue;
+    }
+    error("错误序列");
+  }
+  printf("  ret\n");
+  return 0;
 }
