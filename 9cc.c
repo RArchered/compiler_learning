@@ -2,6 +2,7 @@
 
 #include "tokenize.c"
 
+
 // 语法树的基本节点的类型
 typedef enum {
   ND_ADD, // +
@@ -20,6 +21,10 @@ struct Node {
   Node *rhs; // 右节点类型
   int val; // 节点为整数时的值
 };
+
+Node *expr();
+Node *mul();
+Node *term();
 
 // 创建新节点
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
@@ -81,11 +86,57 @@ Node *term() {
   return new_node_num(expect_number());
 }
 
+void gen(Node *node) {
+  // 递归终止节点，数字节点压栈
+  if (node->kind == ND_NUM) {
+    printf("  push %d\n", node->val);
+    return;
+  }
+
+  // 左右分别入栈
+  gen(node->lhs);
+  gen(node->rhs);
+
+  printf("  pop rdi\n");
+  printf("  pop rax\n");
+
+  switch (node->kind) {
+    case ND_ADD:
+      printf("  add rax, rdi\n");
+      break;
+    case ND_SUB:
+      printf("  sub rax, rdi\n");
+      break;
+    case ND_MUL:
+      printf("  imul rax, rdi\n");
+      break;
+    case ND_DIV:
+      printf("  cqo\n");
+      printf("  idiv rdi\n");
+      break;  
+  }
+  // 结果压入堆栈
+  printf("  push rax\n");
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     fprintf(stderr, "参数数量错误\n");
     return 1;
   }
   // 文本转token
-  // token = token
+  token = tokenize(argv[1]);
+  Node *node = expr();
+
+  // 输出前半部分
+  printf(".intel_syntax noprefix\n");
+  printf(".global main\n");
+  printf("main:\n");
+
+  // 生成抽象语法树指令
+  gen(node);
+
+  printf("  pop rax\n");
+  printf("  ret\n");
+  return 0;
 }

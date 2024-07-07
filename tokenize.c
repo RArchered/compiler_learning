@@ -113,29 +113,29 @@ Token *tokenize(char *p) {
   return head.next;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    error("参数错误");
-    return 1;
-  }
-  // 解析token
-  token = tokenize(argv[1]);
-  printf(".intel_syntax noprefix\n");
-  printf(".global main\n");
-  printf("main:\n");
+// int main(int argc, char **argv) {
+//   if (argc != 2) {
+//     error("参数错误");
+//     return 1;
+//   }
+//   // 解析token
+//   token = tokenize(argv[1]);
+//   printf(".intel_syntax noprefix\n");
+//   printf(".global main\n");
+//   printf("main:\n");
 
-  printf("  mov rax, %d\n", expect_number());
-  while (!at_eof()) {
-    if (consume('+')) {
-      printf("  add rax, %d\n", expect_number());
-      continue;
-    }
-    if (consume('-')) {
-      printf("  sub rax, %d\n", expect_number());
-      continue;
-    }
-    error("错误序列");
-  }
-  printf("  ret\n");
-  return 0;
-}
+//   printf("  mov rax, %d\n", expect_number());
+//   while (!at_eof()) {
+//     if (consume('+')) {
+//       printf("  add rax, %d\n", expect_number());
+//       continue;
+//     }
+//     if (consume('-')) {
+//       printf("  sub rax, %d\n", expect_number());
+//       continue;
+//     }
+//     error("错误序列");
+//   }
+//   printf("  ret\n");
+//   return 0;
+// }
