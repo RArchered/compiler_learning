@@ -124,7 +124,8 @@ int main(int argc, char **argv) {
     fprintf(stderr, "参数数量错误\n");
     return 1;
   }
-  // 文本转token
+  // 初始化用户输入，文本转token
+  user_input = argv[1];
   token = tokenize(argv[1]);
   Node *node = expr();
 

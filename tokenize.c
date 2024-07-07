@@ -22,11 +22,18 @@ struct Token {
 
 // 全局变量，正在处理的Token
 Token *token;
+// 全局变量，用户输入字符串
+char *user_input;
 
-// 错误打印，退出程序
-void error(char *fmt, ...) {
+// 错误位置
+void error_at(char *loc, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
+
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, "");
+  fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
   exit(1);
@@ -46,7 +53,7 @@ bool consume(char op) {
 void expect(char op) {
   if (token->kind != TK_RESERVED || token->str[0] != op) {
     // 预期失败，执行编译报错
-    error("不是'%c'", op);
+    error_at(token->str, "不是'%c'", op);
   }
   // 预期成功，更新当前处理的token
   token = token->next;
@@ -56,7 +63,7 @@ void expect(char op) {
 int expect_number() {
   if (token->kind != TK_NUM) {
     // 预期失败，执行编译报错
-    error("不是数值");
+    error_at(token->str, "不是数值");
   }
   // 预期成功，更新当前处理的token
   int re = token->val;
@@ -101,12 +108,13 @@ Token *tokenize(char *p) {
     }
     // 识别当前字符是否是数字
     if (isdigit(*p)) {
+      
       cur = new_token(TK_NUM, cur, p);
       // 转换数字并将p赋值为结束位置
       cur->val = strtol(p, &p, 10);
       continue;
     }
-    error("标记解析失败");
+    error_at(p, "标记解析失败");
   }
 
   new_token(TK_EOF, cur, p);
